@@ -2,28 +2,13 @@
 from flask import Flask, render_template, request
 
 import datetime
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import numpy as np
-tf.disable_v2_behavior()
 
 app = Flask(__name__)
 
-X = tf.placeholder(tf.float32, shape=[None, 4])
-Y = tf.placeholder(tf.float32, shape=[None, 1])
-W = tf.Variable(tf.random_normal([4, 1]), name="weight")
-b = tf.Variable(tf.random_normal([1]), name="bias")
-
-hypothesis = tf.matmul(X, W) + b
-
-#저장된 모델 불러오는 모델 초기화
-saver = tf.train.Saver()
-model = tf.global_variables_initializer()
-
-sess = tf.Session()
-sess.run(model)
-
-save_path = "./model/saved.cpkt"  # cpkt파일 불러오기
-saver.restore(sess, save_path)
+#저장된 모델 불러오기
+model = tf.keras.models.load_model('./model/saved.ckpt')
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -42,9 +27,8 @@ def index():
 	
 	# 예측 수행
 	x_data = arr[0:4]  # avg_temp, min_temp, max_temp, rain_fall
-	dict = sess.run(hypothesis, feed_dict={X: x_data})
 	
-	price = dict[0]
+	price = model.predict(x_data)
 	return render_template('index.html', price = price)
 
 if __name__ == '__main__':
